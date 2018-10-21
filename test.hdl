@@ -58,13 +58,36 @@ full_adder (a b carry_in) => (sum carry_out) {
     2x1mux [o0 o1 s2] [output]
 }
 
-my_chip () => () {
-    input_chip [] [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2]
-    8x1mux [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2] [out]
-    output_chip [out] []
+1x2demux (i s) => (o0 01) {
+    not [s] [not_s]
+    and [i not_s] [o0]
+    and [i s] [01]
 }
 
-RUN my_chip
+1x4demux (i s0 s1) => (o0 o1 o2 o3) {
+    1x2demux [i s1] [bottom top]
+    1x2demux [bottom s0] [o0 o1]
+    1x2demux [top s0] [o2 o3]
+}
+
+1x8demux (i s0 s1 s2) => (o0 o1 o2 o3 o4 o5 o6 o7) {
+    1x2demux [i s2] [bottom top]
+    1x4demux [bottom s0 s1] [o0 o1 o2 o3]
+    1x4demux [top s0 s1] [o4 o5 o6 o7]
+}
+
+my_chip () => () {
+   input_chip [] [i s0 s1 s2]
+   1x8demux [i s0 s1 s2] [o0 o1 o2 o3 o4 o5 o6 o7]
+   output_chip [o0 o1 o2 o3 o4 o5 o6 o7] []
+}
+
+# my_chip () => () {
+#    input_chip [] [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2]
+#    8x1mux [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2] [out]
+#    output_chip [out] []
+# }
+
 
 # my_chip (a0 a1 a2 a3 b0 b1 b2 b3) => () {
 #     4adder [a0 a1 a2 a3 b0 b1 b2 b3] [s0 s1 s2 s3 carry_out]
@@ -73,3 +96,5 @@ RUN my_chip
 # }
 
 #RUN my_chip 1 0 0 1 1 0 0 0
+
+RUN my_chip
