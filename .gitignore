@@ -109,3 +109,9 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# parser files
+chips_n_stuff/hdl_parser/parser.out
+chips_n_stuff/hdl_parser/parsetab.py
+
+
