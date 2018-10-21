@@ -37,7 +37,7 @@ class Command(object):
 
     def __init__(self, name, *params):
         self.name = name
-        self.params = params
+        self.params = list(params)
 
 class Instructions(object):
 
@@ -88,7 +88,8 @@ def p_run_command_2(p):
     """
     run_command : run_command BOOLEAN
     """
-    p[0].params.append(p[1])
+    p[1].params.append(bool(int(p[2])))
+    p[0] = p[1]
 
 # 
 # def p_chip_definitions_1(p):
