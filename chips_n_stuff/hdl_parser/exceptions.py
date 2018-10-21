@@ -1,0 +1,2 @@
+class HdlInterpreterError(Exception):
+    pass
