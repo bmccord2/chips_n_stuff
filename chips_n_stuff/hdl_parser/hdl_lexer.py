@@ -31,6 +31,7 @@ t_BOOLEAN = r"[01]"
 t_RUN = r"RUN"
 
 t_ignore = ' \t\n'
+t_ignore_COMMENT = r'\#.*'
 
 def t_error(t):
     raise TypeError("Unknown text '%s'" % (t.value,))
