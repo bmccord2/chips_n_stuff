@@ -2,7 +2,7 @@ from random import shuffle
 
 from ..gates.nand import nand
 from ..gates.io import (input_chip, output_chip, decimal_input_chip,
-    decimal_output_chip)
+    decimal_output_chip, signed_decimal_input_chip, signed_decimal_output_chip)
 from .hdl_parser import parser
 from .exceptions import HdlInterpreterError
 
@@ -11,7 +11,9 @@ builtin_chips = {
     'input_chip': input_chip,
     'output_chip': output_chip,
     'decimal_input_chip': decimal_input_chip,
-    'decimal_output_chip': decimal_output_chip
+    'decimal_output_chip': decimal_output_chip,
+    'signed_decimal_input_chip': signed_decimal_input_chip,
+    'signed_decimal_output_chip': signed_decimal_output_chip,
 }
 
 chips = {}
@@ -47,7 +49,7 @@ class Wire(object):
     def notify(self):
         shuffle(self.listeners)
         for listener in self.listeners:
-            print("listener called, value is %s" % self._value)
+            #print("listener called, value is %s" % self._value)
             listener()
 
 
@@ -65,7 +67,6 @@ class ExecutableBuiltin(ExecutableBase):
         self.func = func
 
         self._initialize_callbacks()
-        self.run()
 
     def _initialize_callbacks(self):
         for wire in self.input_wires:
@@ -134,7 +135,11 @@ class ExecutableChip(ExecutableBase):
             else:
                 self.internal_chips[chip_id] = ExecutableChip(chip_definition, input_wires, output_wires)
 
-
+    def run(self):
+        chips = list(self.internal_chips.values())
+        shuffle(chips)
+        for chip in chips:
+            chip.run()
 
 class ExecutableCommand(object):
 
@@ -159,6 +164,7 @@ class ExecutableCommand(object):
 
             inputs = [Wire(input_value) for input_value in input_params]
             chip = ExecutableChip(chip_definition, inputs, [])
+            chip.run()
         else:
             raise ValueError("Unknown command '%s'" % self.command.name)
 
@@ -175,6 +181,19 @@ def interpret(data):
 
     for chip_definition in instructions.definitions:
         chips[chip_definition.name] = chip_definition
+
+    for chip_name, chip_definition in chips.items():
+        used_inputs = set()
+        used_outputs = set()
+
+        for statement in chip_definition.logic:
+            used_inputs.update(statement.inputs)
+            used_outputs.update(statement.outputs)
+
+        if not used_inputs.issuperset(chip_definition.inputs):
+            print("WARNING: not all inputs used by chip '%s'" % chip_name)
+        if not used_outputs.issuperset(chip_definition.outputs):
+            print("WARNING: not all outputs set by chip '%s'" % chip_name)
 
     for command in instructions.commands:
         exec_command = ExecutableCommand(command)

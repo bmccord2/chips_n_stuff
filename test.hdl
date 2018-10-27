@@ -1,4 +1,4 @@
-not (a b) => (output) {
+not (a) =>  (output) {
     nand [a a] [output] 
 }
 
@@ -32,11 +32,12 @@ full_adder (a b carry_in) => (sum carry_out) {
     or [c1 c2] [carry_out]
 }
 
-4adder (a0 a1 a2 a3 b0 b1 b2 b3 carry_in) => (s0 s1 s2 s3 carry_out) {
+4adder (a0 a1 a2 a3 b0 b1 b2 b3 carry_in) => (s0 s1 s2 s3 overflow) {
     full_adder [a0 b0 carry_in] [s0 c0]
     full_adder [a1 b1 c0] [s1 c1]
     full_adder [a2 b2 c1] [s2 c2]
-    full_adder [a3 b3 c2] [s3 carry_out]
+    full_adder [a3 b3 c2] [s3 c3]
+    xor [c2 c3] [overflow]
 }
 
 2x1mux (a b s) => (output) {
@@ -76,11 +77,11 @@ full_adder (a b carry_in) => (sum carry_out) {
     1x4demux [top s0 s1] [o4 o5 o6 o7]
 }
 
-my_chip () => () {
-   input_chip [] [i s0 s1 s2]
-   1x8demux [i s0 s1 s2] [o0 o1 o2 o3 o4 o5 o6 o7]
-   output_chip [o0 o1 o2 o3 o4 o5 o6 o7] []
-}
+# my_chip () => () {
+#    input_chip [] [i s0 s1 s2]
+#    1x8demux [i s0 s1 s2] [o0 o1 o2 o3 o4 o5 o6 o7]
+#    output_chip [o0 o1 o2 o3 o4 o5 o6 o7] []
+# }
 
 # my_chip () => () {
 #    input_chip [] [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2]
@@ -89,12 +90,16 @@ my_chip () => () {
 # }
 
 
-# my_chip (a0 a1 a2 a3 b0 b1 b2 b3) => () {
-#     4adder [a0 a1 a2 a3 b0 b1 b2 b3] [s0 s1 s2 s3 carry_out]
-#     decimal_output_chip [s0 s1 s2 s3 carry_out] []
-#     output_chip [s0 s1 s2 s3 carry_out] []
-# }
+my_chip () => () {
+    signed_decimal_input_chip [] [a0 a1 a2 a3]
+    signed_decimal_input_chip [] [b0 b1 b2 b3]
+    4adder [a0 a1 a2 a3 b0 b1 b2 b3] [s0 s1 s2 s3 overflow]
+    signed_decimal_output_chip [s0 s1 s2 s3] []
+    output_chip [overflow] []
+    # output_chip [s0 s1 s2 s3 overflow] []
+}
 
 #RUN my_chip 1 0 0 1 1 0 0 0
 
 RUN my_chip
+
