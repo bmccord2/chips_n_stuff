@@ -15,11 +15,13 @@ tokens = (
     'CLOSE_BRACE',
     'OPEN_SQUARE',
     'CLOSE_SQUARE',
-    'BOOLEAN',
+    'NUMBER',
+    'COLON',
+    'DOLLAR',
     'RUN',
 )
 
-t_NAME = r'(?!RUN)(?![0-9]+\s)[a-zA-Z_0-9]+'
+t_NAME = r'(?!RUN)(?![0-9]+([^a-zA-Z_0-9]|$))[a-zA-Z_0-9]+'
 t_CHIP_FUNC_OP = r'\=\>'
 t_OPEN_PARENS = r'\('
 t_CLOSE_PARENS = r'\)'
@@ -27,14 +29,20 @@ t_OPEN_BRACE = r'\{'
 t_CLOSE_BRACE = r'\}'
 t_OPEN_SQUARE = r"\["
 t_CLOSE_SQUARE = r"\]"
-t_BOOLEAN = r"[01]"
+t_DOLLAR = r'\$'
+t_NUMBER = r"[0-9]"
+t_COLON = r":"
 t_RUN = r"RUN"
 
-t_ignore = ' \t\n'
+t_ignore = ' \t\r'
 t_ignore_COMMENT = r'\#.*'
 
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
 def t_error(t):
-    raise TypeError("Unknown text '%s'" % (t.value,))
+    raise TypeError("Unknown text '%s' at line %s" % (t.value,t.lexer.lineno))
 
 
 lex.lex()

@@ -1,6 +1,7 @@
 from random import shuffle
 
 from ..gates.nand import nand
+from ..gates.join_wire import join_wire
 from ..gates.io import (input_chip, output_chip, decimal_input_chip,
     decimal_output_chip, signed_decimal_input_chip, signed_decimal_output_chip)
 from .hdl_parser import parser
@@ -8,6 +9,7 @@ from .exceptions import HdlInterpreterError
 
 builtin_chips = {
     'nand': nand,
+    'join_wire': join_wire,
     'input_chip': input_chip,
     'output_chip': output_chip,
     'decimal_input_chip': decimal_input_chip,

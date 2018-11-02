@@ -1,102 +1,101 @@
 not (a) =>  (output) {
-    nand [a a] [output] 
+    nand (a a) => (output) 
 }
 
 and (a b) => (output) {
-    nand [a b] [c]
-    not [c] [output]
+    nand (a b) => (c)
+    not (c) => (output)
 }
 
 or (a b) => (output) {
-    not [a] [not_a]
-    not [b] [not_b]
-    nand [not_a not_b] [output]
+    not (a) => (not_a)
+    not (b) => (not_b)
+    nand (not_a not_b) => (output)
 }
 
 xor (a b) => (output) {
-    not [a] [not_a]
-    not [b] [not_b]
-    and [a not_b] [a_notb]
-    and [b not_a] [notb_a]
-    or [a_notb notb_a] [output]
+    not (a) => (not_a)
+    not (b) => (not_b)
+    and (a not_b) => (a_notb)
+    and (b not_a) => (notb_a)
+    or (a_notb notb_a) => (output)
 }
 
 half_adder (a b) => (sum carry) {
-    xor [a b] [sum]
-    and [a b] [carry]
+    xor (a b) => (sum)
+    and (a b) => (carry)
 }
 
 full_adder (a b carry_in) => (sum carry_out) {
-    half_adder [a b] [s1 c1]
-    half_adder [carry_in s1] [sum c2]
-    or [c1 c2] [carry_out]
+    half_adder (a b) => (s1 c1)
+    half_adder (carry_in s1) => (sum c2)
+    or (c1 c2) => (carry_out)
 }
 
-4adder (a0 a1 a2 a3 b0 b1 b2 b3 carry_in) => (s0 s1 s2 s3 overflow) {
-    full_adder [a0 b0 carry_in] [s0 c0]
-    full_adder [a1 b1 c0] [s1 c1]
-    full_adder [a2 b2 c1] [s2 c2]
-    full_adder [a3 b3 c2] [s3 c3]
-    xor [c2 c3] [overflow]
+4adder (a[$4] b[$4] carry_in) => (s0 s1 s2 s3 overflow) {
+    full_adder (a[0] b[0] carry_in) => (s0 c0)
+    full_adder (a[1] b[1] c0) => (s1 c1)
+    full_adder (a[2] b[2] c1) => (s2 c2)
+    full_adder (a[3] b[3] c2) => (s3 c3)
+    xor (c2 c3) => (overflow)
 }
 
 2x1mux (a b s) => (output) {
-    not [s] [not_s]
-    and [a not_s] [a_nots]
-    and [b s] [b_s]
-    or [a_nots b_s] [output]
+    not (s) => (not_s)
+    and (a not_s) => (a_nots)
+    and (b s) => (b_s)
+    or (a_nots b_s) => (output)
 }
 
 4x1mux (i0 i1 i2 i3 s0 s1) => (output) {
-    2x1mux [i0 i1 s0] [o0]
-    2x1mux [i2 i3 s0] [o1]
-    2x1mux [o0 o1 s1] [output] 
+    2x1mux (i0 i1 s0) => (o0)
+    2x1mux (i2 i3 s0) => (o1)
+    2x1mux (o0 o1 s1) => (output) 
 }
 
 8x1mux (i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2) => (output) {
-    4x1mux [i0 i1 i2 i3 s0 s1] [o0]
-    4x1mux [i4 i5 i6 i7 s0 s1] [o1]
-    2x1mux [o0 o1 s2] [output]
+    4x1mux (i0 i1 i2 i3 s0 s1) => (o0)
+    4x1mux (i4 i5 i6 i7 s0 s1) => (o1)
+    2x1mux (o0 o1 s2) => (output)
 }
 
-1x2demux (i s) => (o0 01) {
-    not [s] [not_s]
-    and [i not_s] [o0]
-    and [i s] [01]
+1x2demux (i s) => (o0 o1) {
+    not (s) => (not_s)
+    and (i not_s) => (o0)
+    and (i s) => (o1)
 }
 
 1x4demux (i s0 s1) => (o0 o1 o2 o3) {
-    1x2demux [i s1] [bottom top]
-    1x2demux [bottom s0] [o0 o1]
-    1x2demux [top s0] [o2 o3]
+    1x2demux (i s1) => (bottom top)
+    1x2demux (bottom s0) => (o0 o1)
+    1x2demux (top s0) => (o2 o3)
 }
 
 1x8demux (i s0 s1 s2) => (o0 o1 o2 o3 o4 o5 o6 o7) {
-    1x2demux [i s2] [bottom top]
-    1x4demux [bottom s0 s1] [o0 o1 o2 o3]
-    1x4demux [top s0 s1] [o4 o5 o6 o7]
+    1x2demux (i s2) => (bottom top)
+    1x4demux (bottom s0 s1) => (o0 o1 o2 o3)
+    1x4demux (top s0 s1) => (o4 o5 o6 o7)
 }
 
 # my_chip () => () {
-#    input_chip [] [i s0 s1 s2]
-#    1x8demux [i s0 s1 s2] [o0 o1 o2 o3 o4 o5 o6 o7]
-#    output_chip [o0 o1 o2 o3 o4 o5 o6 o7] []
+#    input_chip () => (i s0 s1 s2)
+#    1x8demux (i s0 s1 s2) => (o0 o1 o2 o3 o4 o5 o6 o7)
+#    output_chip (o0 o1 o2 o3 o4 o5 o6 o7) => ()
 # }
 
 # my_chip () => () {
-#    input_chip [] [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2]
-#    8x1mux [i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2] [out]
-#    output_chip [out] []
+#    input_chip () => (i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2)
+#    8x1mux (i0 i1 i2 i3 i4 i5 i6 i7 s0 s1 s2) => (out)
+#    output_chip (out) => ()
 # }
 
-
 my_chip () => () {
-    signed_decimal_input_chip [] [a0 a1 a2 a3]
-    signed_decimal_input_chip [] [b0 b1 b2 b3]
-    4adder [a0 a1 a2 a3 b0 b1 b2 b3] [s0 s1 s2 s3 overflow]
-    signed_decimal_output_chip [s0 s1 s2 s3] []
-    output_chip [overflow] []
-    # output_chip [s0 s1 s2 s3 overflow] []
+    signed_decimal_input_chip () => (a0 a1 a2 a3)
+    signed_decimal_input_chip () => (b0 b1 b2 b3)
+    4adder (a0 a1 a2 a3 b0 b1 b2 b3) => (s0 s1 s2 s3 overflow)
+    signed_decimal_output_chip (s0 s1 s2 s3) => ()
+    output_chip (overflow) => ()
+    # output_chip (s0 s1 s2 s3 overflow) => ()
 }
 
 #RUN my_chip 1 0 0 1 1 0 0 0
