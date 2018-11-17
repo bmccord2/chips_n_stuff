@@ -32,10 +32,11 @@ class IndexingName(object):
         self.i1 = i1
 
     def expand(self):
-        # [i0:i1] - multi inclusive
+        # [i0:i1] - i0 inclusive, i1 exclusive
         # [i0] - single
         if self.i1 is None:
-            start = end = self.i0
+            index = self.i0
+            return ['{}[{}]'.format(self.base_name, index)]
         else:
             start = self.i0
             end = self.i1
@@ -44,7 +45,7 @@ class IndexingName(object):
         if end < start:
             raise HdlParsingError('Index end must be greater than or equal to start')
 
-        return ['{}[{}]'.format(self.base_name, index) for index in range(start, end + 1)]
+        return ['{}[{}]'.format(self.base_name, index) for index in range(start, end)]
 
 class ChipStatement(object):
 
