@@ -165,14 +165,22 @@ def p_run_command_1(p):
     """
     p[0] = Command(p[1], p[2])
 
+def p_run_command_2(p):
+    """
+    run_command : run_command BINNUM
+    """
+    binnum = p[2][2:]
+    digits = [bool(int(x)) for x in binnum]
+    p[1].params += digits
+    p[0] = p[1]
+
 # def p_run_command_2(p):
 #     """
-#     run_command : run_command BOOLEAN
+#     run_command : run_command NUMBER
 #     """
 #     p[1].params.append(bool(int(p[2])))
 #     p[0] = p[1]
 
-# 
 # def p_chip_definitions_1(p):
 #     """
 #     chip_definitions : chip_definition

@@ -154,6 +154,7 @@ class ExecutableCommand(object):
             chip_name = params[0]
             chip_definition = get_chip(chip_name)
             
+            num_outputs = len(chip_definition.outputs)
             input_params = params[1:]
             num_expected_in = len(chip_definition.inputs)
             num_actual_in = len(input_params)
@@ -165,8 +166,10 @@ class ExecutableCommand(object):
                 input_params = [0 for i in range(num_expected_in - num_actual_in)]
 
             inputs = [Wire(input_value) for input_value in input_params]
-            chip = ExecutableChip(chip_definition, inputs, [])
+            outputs = [Wire(0) for i in range(num_outputs)]
+            chip = ExecutableChip(chip_definition, inputs, outputs)
             chip.run()
+            return [wire.get_value() for wire in chip.output_wires]
         else:
             raise ValueError("Unknown command '%s'" % self.command.name)
 
@@ -193,10 +196,16 @@ def interpret(data):
             used_outputs.update(statement.outputs)
 
         if not used_inputs.issuperset(chip_definition.inputs):
-            print("WARNING: not all inputs used by chip '%s'" % chip_name)
+            unused = [x for x in chip_definition.inputs if x not in used_inputs]
+            print("WARNING: not all inputs used by chip '%s'. Unused: %s" 
+                % (chip_name, unused))
         if not used_outputs.issuperset(chip_definition.outputs):
-            print("WARNING: not all outputs set by chip '%s'" % chip_name)
+            unused = [x for x in chip_definition.outputs if x not in used_inputs]
+            print("WARNING: not all outputs used by chip '%s'. Unused: %s" 
+                % (chip_name, unused))
 
     for command in instructions.commands:
         exec_command = ExecutableCommand(command)
-        exec_command.run()
+        result = exec_command.run()
+        if result:
+            print('Result: {}'.format([int(x) for x in result]))

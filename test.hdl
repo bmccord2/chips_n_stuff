@@ -32,7 +32,47 @@ full_adder (a b carry_in) => (sum carry_out) {
     or (c1 c2) => (carry_out)
 }
 
-4adder (a[$4] b[$4] carry_in) => (s[$4] overflow) {
+2not (a[$2]) => (b[$2]) {
+    not (a[0]) => (b[0])
+    not (a[1]) => (b[1])
+}
+
+4not (a[$4]) => (b[$4]) {
+    2not (a[:2]) => (b[:2])
+    2not (a[2:4]) => (b[2:4])
+}
+
+8not (a[$8]) => (b[$8]) {
+    4not (a[:4]) => (b[:4])
+    4not (a[4:8]) => (b[4:8])
+}
+
+16not (a[$16]) => (b[$16]) {
+    8not (a[:8]) => (b[:8])
+    8not (a[8:16]) => (b[8:16])
+}
+
+2xor (a[$2] b[$2]) => (c[$2]) {
+    xor (a[0] b[0]) => (c[0])
+    xor (a[1] b[1]) => (c[1])
+}
+
+4xor (a[$4] b[$4]) => (c[$4]) {
+    2xor (a[:2] b[:2]) => (c[:2])
+    2xor (a[2:4] b[2:4]) => (c[2:4])
+}
+
+8xor (a[$8] b[$8]) => (c[$8]) {
+    4xor (a[:4] b[:4]) => (c[:4])
+    4xor (a[4:8] b[4:8]) => (c[4:8])
+}
+
+16xor (a[$16] b[$16]) => (c[$16]) {
+    8xor (a[:8] b[:8]) => (c[:8])
+    8xor (a[8:16] b[8:16]) => (c[8:16])
+}
+
+4adder_oflow (a[$4] b[$4] carry_in) => (s[$4] overflow) {
     full_adder (a[0] b[0] carry_in) => (s[0] c[0])
     full_adder (a[1] b[1] c[0]) => (s[1] c[1])
     full_adder (a[2] b[2] c[1]) => (s[2] c[2])
@@ -40,6 +80,36 @@ full_adder (a b carry_in) => (sum carry_out) {
     xor (c[2] c[3]) => (overflow)
 }
 
+4adder (a[$4] b[$4] carry_in) => (s[$4] carry_out) {
+    full_adder (a[0] b[0] carry_in) => (s[0] c[0])
+    full_adder (a[1] b[1] c[0]) => (s[1] c[1])
+    full_adder (a[2] b[2] c[1]) => (s[2] c[2])
+    full_adder (a[3] b[3] c[2]) => (s[3] carry_out)
+}
+
+16adder_oflow (a[$16] b[$16] carry_in) => (s[$16] overflow) {
+    4adder(a[0:4]   b[0:4]   carry_in)    => (s[0:4]   c[3])
+    4adder(a[4:8]   b[4:8]   c[3])        => (s[4:8]   c[7])
+    4adder(a[8:12]  b[8:12]  c[7])        => (s[8:12]  c[11])
+    4adder_oflow(a[12:16] b[12:16] c[11]) => (s[12:16] overflow)
+}
+
+
+16adder (a[$16] b[$16] carry_in) => (s[$16] carry_out) {
+    4adder(a[0:4]   b[0:4]   carry_in)   => (s[0:4]   c[3])
+    4adder(a[4:8]   b[4:8]   c[3])       => (s[4:8]   c[7])
+    4adder(a[8:12]  b[8:12]  c[7])       => (s[8:12]  c[11])
+    4adder(a[12:16] b[12:16] c[11])      => (s[12:16] carry_out)
+}
+
+16add_sub (a[$16] b[$16] sub) => (s[$16] overflow) {
+    join_wire (sub) => (flip[$16])
+    16xor (b[:16] flip[:16]) => (bf[$16])
+    4adder(a[0:4]   bf[0:4]   sub)         => (s[0:4]   c[3])
+    4adder(a[4:8]   bf[4:8]   c[3])        => (s[4:8]   c[7])
+    4adder(a[8:12]  bf[8:12]  c[7])        => (s[8:12]  c[11])
+    4adder_oflow(a[12:16] bf[12:16] c[11]) => (s[12:16] overflow)
+}
 
 
 2x1mux (a b s) => (output) {
@@ -59,6 +129,12 @@ full_adder (a b carry_in) => (sum carry_out) {
     4x1mux (i0 i1 i2 i3 s0 s1) => (o0)
     4x1mux (i4 i5 i6 i7 s0 s1) => (o1)
     2x1mux (o0 o1 s2) => (output)
+}
+
+16x1mux (i[$16] s[$4]) => (output) {
+    8x1mux (i[0:8] s[0:3]) => (o0)
+    8x1mux (i[8:16] s[0:3]) => (o1)
+    2x1mux (o0 o1 s[3]) => (output)
 }
 
 1x2demux (i s) => (o0 o1) {
@@ -92,15 +168,37 @@ full_adder (a b carry_in) => (sum carry_out) {
 # }
 
 my_chip () => () {
-    signed_decimal_input_chip () => (a0 a1 a2 a3)
-    signed_decimal_input_chip () => (b0 b1 b2 b3)
-    4adder (a0 a1 a2 a3 b0 b1 b2 b3) => (s0 s1 s2 s3 overflow)
-    signed_decimal_output_chip (s0 s1 s2 s3) => ()
+    signed_decimal_input_chip () => (a[$16])
+    signed_decimal_input_chip () => (b[$16])
+    input_chip () => (sub)
+    16add_sub (a[:16] b[:16] sub) => (s[$16] overflow)
+    signed_decimal_output_chip (s[:16]) => ()
     output_chip (overflow) => ()
-    # output_chip (s0 s1 s2 s3 overflow) => ()
 }
 
-#RUN my_chip 1 0 0 1 1 0 0 0
+test_16x1mux (i[$16] s[$4]) => (out) {
+    input_chip () => (i[$16])
+    input_chip () => (s[$4])
+    16x1mux (i[:16] s[:4]) => (out)
+    output_chip (out) => ()
+}
 
 RUN my_chip
 
+# RUN 16not 0b0000000000000000
+# RUN 16x1mux 0b1000000000000000 0b0000
+# RUN 16x1mux 0b0100000000000000 0b1000
+# RUN 16x1mux 0b0010000000000000 0b0100
+# RUN 16x1mux 0b0001000000000000 0b1100
+# RUN 16x1mux 0b0000100000000000 0b0010
+# RUN 16x1mux 0b0000010000000000 0b1010
+# RUN 16x1mux 0b0000001000000000 0b0110
+# RUN 16x1mux 0b0000000100000000 0b1110
+# RUN 16x1mux 0b0000000010000000 0b0001
+# RUN 16x1mux 0b0000000001000000 0b1001
+# RUN 16x1mux 0b0000000000100000 0b0101
+# RUN 16x1mux 0b0000000000010000 0b1101
+# RUN 16x1mux 0b0000000000001000 0b0011
+# RUN 16x1mux 0b0000000000000100 0b1011
+# RUN 16x1mux 0b0000000000000010 0b0111
+# RUN 16x1mux 0b0000000000000001 0b1111
