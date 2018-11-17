@@ -66,11 +66,9 @@ def signed_decimal_input_chip(num_outputs):
 
                 # currently big endian, convert to little endian
                 binary = list(reversed([int(x) for x in values_str]))
-                print(binary)
             except ValueError as e:
                 raise ValueError("Invalid input '%s'" % raw_values)
             if len(values_str) > num_outputs or str(binary[-1]) != sign_dig:
-                print(result)
                 raise ValueError("Overflow.")
 
             result = binary
