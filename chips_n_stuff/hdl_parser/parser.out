@@ -25,21 +25,22 @@ Rule 19    name_sequence -> name_sequence indexing_name
 Rule 20    name_sequence -> name_sequence array_init
 Rule 21    indexing_name -> NAME OPEN_SQUARE NUMBER CLOSE_SQUARE
 Rule 22    indexing_name -> NAME OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
-Rule 23    array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
+Rule 23    indexing_name -> NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+Rule 24    array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
 
 Terminals, with rules where they appear
 
 CHIP_FUNC_OP         : 8 12
 CLOSE_BRACE          : 9
 CLOSE_PARENS         : 13 14
-CLOSE_SQUARE         : 21 22 23
-COLON                : 22
-DOLLAR               : 23
-NAME                 : 6 8 12 15 18 21 22 23
-NUMBER               : 21 22 22 23
+CLOSE_SQUARE         : 21 22 23 24
+COLON                : 22 23
+DOLLAR               : 24
+NAME                 : 6 8 12 15 18 21 22 23 24
+NUMBER               : 21 22 22 23 24
 OPEN_BRACE           : 9
 OPEN_PARENS          : 13 14
-OPEN_SQUARE          : 21 22 23
+OPEN_SQUARE          : 21 22 23 24
 RUN                  : 6
 error                : 
 
@@ -72,16 +73,32 @@ state 0
     (8) chip_declaration -> . NAME chip_io CHIP_FUNC_OP chip_io
     (6) run_command -> . RUN NAME
 
-    NAME            shift and go to state 1
+    NAME            shift and go to state 3
     RUN             shift and go to state 2
 
-    chip_definition                shift and go to state 3
-    run_command                    shift and go to state 4
-    chip_instructions              shift and go to state 5
-    command                        shift and go to state 6
+    command                        shift and go to state 1
+    chip_instructions              shift and go to state 4
+    chip_definition                shift and go to state 5
+    run_command                    shift and go to state 6
     chip_declaration               shift and go to state 7
 
 state 1
+
+    (2) chip_instructions -> command .
+
+    NAME            reduce using rule 2 (chip_instructions -> command .)
+    RUN             reduce using rule 2 (chip_instructions -> command .)
+    $end            reduce using rule 2 (chip_instructions -> command .)
+
+
+state 2
+
+    (6) run_command -> RUN . NAME
+
+    NAME            shift and go to state 8
+
+
+state 3
 
     (8) chip_declaration -> NAME . chip_io CHIP_FUNC_OP chip_io
     (13) chip_io -> . OPEN_PARENS name_sequence CLOSE_PARENS
@@ -89,34 +106,9 @@ state 1
 
     OPEN_PARENS     shift and go to state 9
 
-    chip_io                        shift and go to state 8
-
-state 2
-
-    (6) run_command -> RUN . NAME
-
-    NAME            shift and go to state 10
-
-
-state 3
-
-    (1) chip_instructions -> chip_definition .
-
-    NAME            reduce using rule 1 (chip_instructions -> chip_definition .)
-    RUN             reduce using rule 1 (chip_instructions -> chip_definition .)
-    $end            reduce using rule 1 (chip_instructions -> chip_definition .)
-
+    chip_io                        shift and go to state 10
 
 state 4
-
-    (5) command -> run_command .
-
-    NAME            reduce using rule 5 (command -> run_command .)
-    RUN             reduce using rule 5 (command -> run_command .)
-    $end            reduce using rule 5 (command -> run_command .)
-
-
-state 5
 
     (0) S' -> chip_instructions .
     (3) chip_instructions -> chip_instructions . chip_definition
@@ -126,21 +118,30 @@ state 5
     (8) chip_declaration -> . NAME chip_io CHIP_FUNC_OP chip_io
     (6) run_command -> . RUN NAME
 
-    NAME            shift and go to state 1
+    NAME            shift and go to state 3
     RUN             shift and go to state 2
 
-    chip_definition                shift and go to state 11
-    run_command                    shift and go to state 4
-    command                        shift and go to state 12
+    command                        shift and go to state 11
+    chip_definition                shift and go to state 12
+    run_command                    shift and go to state 6
     chip_declaration               shift and go to state 7
+
+state 5
+
+    (1) chip_instructions -> chip_definition .
+
+    NAME            reduce using rule 1 (chip_instructions -> chip_definition .)
+    RUN             reduce using rule 1 (chip_instructions -> chip_definition .)
+    $end            reduce using rule 1 (chip_instructions -> chip_definition .)
+
 
 state 6
 
-    (2) chip_instructions -> command .
+    (5) command -> run_command .
 
-    NAME            reduce using rule 2 (chip_instructions -> command .)
-    RUN             reduce using rule 2 (chip_instructions -> command .)
-    $end            reduce using rule 2 (chip_instructions -> command .)
+    NAME            reduce using rule 5 (command -> run_command .)
+    RUN             reduce using rule 5 (command -> run_command .)
+    $end            reduce using rule 5 (command -> run_command .)
 
 
 state 7
@@ -154,9 +155,11 @@ state 7
 
 state 8
 
-    (8) chip_declaration -> NAME chip_io . CHIP_FUNC_OP chip_io
+    (6) run_command -> RUN NAME .
 
-    CHIP_FUNC_OP    shift and go to state 15
+    NAME            reduce using rule 6 (run_command -> RUN NAME .)
+    RUN             reduce using rule 6 (run_command -> RUN NAME .)
+    $end            reduce using rule 6 (run_command -> RUN NAME .)
 
 
 state 9
@@ -171,40 +174,39 @@ state 9
     (20) name_sequence -> . name_sequence array_init
     (21) indexing_name -> . NAME OPEN_SQUARE NUMBER CLOSE_SQUARE
     (22) indexing_name -> . NAME OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
-    (23) array_init -> . NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
+    (23) indexing_name -> . NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+    (24) array_init -> . NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
 
-    CLOSE_PARENS    shift and go to state 18
-    NAME            shift and go to state 16
+    CLOSE_PARENS    shift and go to state 17
+    NAME            shift and go to state 18
 
-    array_init                     shift and go to state 19
-    name_sequence                  shift and go to state 17
-    indexing_name                  shift and go to state 20
+    array_init                     shift and go to state 16
+    indexing_name                  shift and go to state 19
+    name_sequence                  shift and go to state 15
 
 state 10
 
-    (6) run_command -> RUN NAME .
+    (8) chip_declaration -> NAME chip_io . CHIP_FUNC_OP chip_io
 
-    NAME            reduce using rule 6 (run_command -> RUN NAME .)
-    RUN             reduce using rule 6 (run_command -> RUN NAME .)
-    $end            reduce using rule 6 (run_command -> RUN NAME .)
+    CHIP_FUNC_OP    shift and go to state 20
 
 
 state 11
-
-    (3) chip_instructions -> chip_instructions chip_definition .
-
-    NAME            reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
-    RUN             reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
-    $end            reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
-
-
-state 12
 
     (4) chip_instructions -> chip_instructions command .
 
     NAME            reduce using rule 4 (chip_instructions -> chip_instructions command .)
     RUN             reduce using rule 4 (chip_instructions -> chip_instructions command .)
     $end            reduce using rule 4 (chip_instructions -> chip_instructions command .)
+
+
+state 12
+
+    (3) chip_instructions -> chip_instructions chip_definition .
+
+    NAME            reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
+    RUN             reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
+    $end            reduce using rule 3 (chip_instructions -> chip_instructions chip_definition .)
 
 
 state 13
@@ -216,8 +218,8 @@ state 13
 
     NAME            shift and go to state 21
 
-    chip_statements                shift and go to state 23
     chip_statement                 shift and go to state 22
+    chip_statements                shift and go to state 23
 
 state 14
 
@@ -230,43 +232,30 @@ state 14
 
 state 15
 
-    (8) chip_declaration -> NAME chip_io CHIP_FUNC_OP . chip_io
-    (13) chip_io -> . OPEN_PARENS name_sequence CLOSE_PARENS
-    (14) chip_io -> . OPEN_PARENS CLOSE_PARENS
-
-    OPEN_PARENS     shift and go to state 9
-
-    chip_io                        shift and go to state 24
-
-state 16
-
-    (15) name_sequence -> NAME .
-    (21) indexing_name -> NAME . OPEN_SQUARE NUMBER CLOSE_SQUARE
-    (22) indexing_name -> NAME . OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
-    (23) array_init -> NAME . OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
-
-    CLOSE_PARENS    reduce using rule 15 (name_sequence -> NAME .)
-    NAME            reduce using rule 15 (name_sequence -> NAME .)
-    OPEN_SQUARE     shift and go to state 25
-
-
-state 17
-
     (13) chip_io -> OPEN_PARENS name_sequence . CLOSE_PARENS
     (18) name_sequence -> name_sequence . NAME
     (19) name_sequence -> name_sequence . indexing_name
     (20) name_sequence -> name_sequence . array_init
     (21) indexing_name -> . NAME OPEN_SQUARE NUMBER CLOSE_SQUARE
     (22) indexing_name -> . NAME OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
-    (23) array_init -> . NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
+    (23) indexing_name -> . NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+    (24) array_init -> . NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
 
-    CLOSE_PARENS    shift and go to state 27
+    CLOSE_PARENS    shift and go to state 25
     NAME            shift and go to state 26
 
-    array_init                     shift and go to state 28
-    indexing_name                  shift and go to state 29
+    array_init                     shift and go to state 24
+    indexing_name                  shift and go to state 27
 
-state 18
+state 16
+
+    (17) name_sequence -> array_init .
+
+    CLOSE_PARENS    reduce using rule 17 (name_sequence -> array_init .)
+    NAME            reduce using rule 17 (name_sequence -> array_init .)
+
+
+state 17
 
     (14) chip_io -> OPEN_PARENS CLOSE_PARENS .
 
@@ -276,21 +265,36 @@ state 18
     NAME            reduce using rule 14 (chip_io -> OPEN_PARENS CLOSE_PARENS .)
 
 
+state 18
+
+    (15) name_sequence -> NAME .
+    (21) indexing_name -> NAME . OPEN_SQUARE NUMBER CLOSE_SQUARE
+    (22) indexing_name -> NAME . OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
+    (23) indexing_name -> NAME . OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+    (24) array_init -> NAME . OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
+
+    CLOSE_PARENS    reduce using rule 15 (name_sequence -> NAME .)
+    NAME            reduce using rule 15 (name_sequence -> NAME .)
+    OPEN_SQUARE     shift and go to state 28
+
+
 state 19
-
-    (17) name_sequence -> array_init .
-
-    CLOSE_PARENS    reduce using rule 17 (name_sequence -> array_init .)
-    NAME            reduce using rule 17 (name_sequence -> array_init .)
-
-
-state 20
 
     (16) name_sequence -> indexing_name .
 
     CLOSE_PARENS    reduce using rule 16 (name_sequence -> indexing_name .)
     NAME            reduce using rule 16 (name_sequence -> indexing_name .)
 
+
+state 20
+
+    (8) chip_declaration -> NAME chip_io CHIP_FUNC_OP . chip_io
+    (13) chip_io -> . OPEN_PARENS name_sequence CLOSE_PARENS
+    (14) chip_io -> . OPEN_PARENS CLOSE_PARENS
+
+    OPEN_PARENS     shift and go to state 9
+
+    chip_io                        shift and go to state 29
 
 state 21
 
@@ -323,34 +327,13 @@ state 23
 
 state 24
 
-    (8) chip_declaration -> NAME chip_io CHIP_FUNC_OP chip_io .
+    (20) name_sequence -> name_sequence array_init .
 
-    OPEN_BRACE      reduce using rule 8 (chip_declaration -> NAME chip_io CHIP_FUNC_OP chip_io .)
+    CLOSE_PARENS    reduce using rule 20 (name_sequence -> name_sequence array_init .)
+    NAME            reduce using rule 20 (name_sequence -> name_sequence array_init .)
 
 
 state 25
-
-    (21) indexing_name -> NAME OPEN_SQUARE . NUMBER CLOSE_SQUARE
-    (22) indexing_name -> NAME OPEN_SQUARE . NUMBER COLON NUMBER CLOSE_SQUARE
-    (23) array_init -> NAME OPEN_SQUARE . DOLLAR NUMBER CLOSE_SQUARE
-
-    NUMBER          shift and go to state 34
-    DOLLAR          shift and go to state 33
-
-
-state 26
-
-    (18) name_sequence -> name_sequence NAME .
-    (21) indexing_name -> NAME . OPEN_SQUARE NUMBER CLOSE_SQUARE
-    (22) indexing_name -> NAME . OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
-    (23) array_init -> NAME . OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
-
-    CLOSE_PARENS    reduce using rule 18 (name_sequence -> name_sequence NAME .)
-    NAME            reduce using rule 18 (name_sequence -> name_sequence NAME .)
-    OPEN_SQUARE     shift and go to state 25
-
-
-state 27
 
     (13) chip_io -> OPEN_PARENS name_sequence CLOSE_PARENS .
 
@@ -360,15 +343,20 @@ state 27
     NAME            reduce using rule 13 (chip_io -> OPEN_PARENS name_sequence CLOSE_PARENS .)
 
 
-state 28
+state 26
 
-    (20) name_sequence -> name_sequence array_init .
+    (18) name_sequence -> name_sequence NAME .
+    (21) indexing_name -> NAME . OPEN_SQUARE NUMBER CLOSE_SQUARE
+    (22) indexing_name -> NAME . OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE
+    (23) indexing_name -> NAME . OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+    (24) array_init -> NAME . OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
 
-    CLOSE_PARENS    reduce using rule 20 (name_sequence -> name_sequence array_init .)
-    NAME            reduce using rule 20 (name_sequence -> name_sequence array_init .)
+    CLOSE_PARENS    reduce using rule 18 (name_sequence -> name_sequence NAME .)
+    NAME            reduce using rule 18 (name_sequence -> name_sequence NAME .)
+    OPEN_SQUARE     shift and go to state 28
 
 
-state 29
+state 27
 
     (19) name_sequence -> name_sequence indexing_name .
 
@@ -376,11 +364,30 @@ state 29
     NAME            reduce using rule 19 (name_sequence -> name_sequence indexing_name .)
 
 
+state 28
+
+    (21) indexing_name -> NAME OPEN_SQUARE . NUMBER CLOSE_SQUARE
+    (22) indexing_name -> NAME OPEN_SQUARE . NUMBER COLON NUMBER CLOSE_SQUARE
+    (23) indexing_name -> NAME OPEN_SQUARE . COLON NUMBER CLOSE_SQUARE
+    (24) array_init -> NAME OPEN_SQUARE . DOLLAR NUMBER CLOSE_SQUARE
+
+    NUMBER          shift and go to state 34
+    COLON           shift and go to state 35
+    DOLLAR          shift and go to state 33
+
+
+state 29
+
+    (8) chip_declaration -> NAME chip_io CHIP_FUNC_OP chip_io .
+
+    OPEN_BRACE      reduce using rule 8 (chip_declaration -> NAME chip_io CHIP_FUNC_OP chip_io .)
+
+
 state 30
 
     (12) chip_statement -> NAME chip_io . CHIP_FUNC_OP chip_io
 
-    CHIP_FUNC_OP    shift and go to state 35
+    CHIP_FUNC_OP    shift and go to state 36
 
 
 state 31
@@ -402,9 +409,9 @@ state 32
 
 state 33
 
-    (23) array_init -> NAME OPEN_SQUARE DOLLAR . NUMBER CLOSE_SQUARE
+    (24) array_init -> NAME OPEN_SQUARE DOLLAR . NUMBER CLOSE_SQUARE
 
-    NUMBER          shift and go to state 36
+    NUMBER          shift and go to state 37
 
 
 state 34
@@ -412,11 +419,18 @@ state 34
     (21) indexing_name -> NAME OPEN_SQUARE NUMBER . CLOSE_SQUARE
     (22) indexing_name -> NAME OPEN_SQUARE NUMBER . COLON NUMBER CLOSE_SQUARE
 
-    CLOSE_SQUARE    shift and go to state 37
-    COLON           shift and go to state 38
+    CLOSE_SQUARE    shift and go to state 38
+    COLON           shift and go to state 39
 
 
 state 35
+
+    (23) indexing_name -> NAME OPEN_SQUARE COLON . NUMBER CLOSE_SQUARE
+
+    NUMBER          shift and go to state 40
+
+
+state 36
 
     (12) chip_statement -> NAME chip_io CHIP_FUNC_OP . chip_io
     (13) chip_io -> . OPEN_PARENS name_sequence CLOSE_PARENS
@@ -424,16 +438,16 @@ state 35
 
     OPEN_PARENS     shift and go to state 9
 
-    chip_io                        shift and go to state 39
-
-state 36
-
-    (23) array_init -> NAME OPEN_SQUARE DOLLAR NUMBER . CLOSE_SQUARE
-
-    CLOSE_SQUARE    shift and go to state 40
-
+    chip_io                        shift and go to state 41
 
 state 37
+
+    (24) array_init -> NAME OPEN_SQUARE DOLLAR NUMBER . CLOSE_SQUARE
+
+    CLOSE_SQUARE    shift and go to state 42
+
+
+state 38
 
     (21) indexing_name -> NAME OPEN_SQUARE NUMBER CLOSE_SQUARE .
 
@@ -441,14 +455,21 @@ state 37
     NAME            reduce using rule 21 (indexing_name -> NAME OPEN_SQUARE NUMBER CLOSE_SQUARE .)
 
 
-state 38
+state 39
 
     (22) indexing_name -> NAME OPEN_SQUARE NUMBER COLON . NUMBER CLOSE_SQUARE
 
-    NUMBER          shift and go to state 41
+    NUMBER          shift and go to state 43
 
 
-state 39
+state 40
+
+    (23) indexing_name -> NAME OPEN_SQUARE COLON NUMBER . CLOSE_SQUARE
+
+    CLOSE_SQUARE    shift and go to state 44
+
+
+state 41
 
     (12) chip_statement -> NAME chip_io CHIP_FUNC_OP chip_io .
 
@@ -456,22 +477,30 @@ state 39
     NAME            reduce using rule 12 (chip_statement -> NAME chip_io CHIP_FUNC_OP chip_io .)
 
 
-state 40
+state 42
 
-    (23) array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .
+    (24) array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .
 
-    CLOSE_PARENS    reduce using rule 23 (array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .)
-    NAME            reduce using rule 23 (array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .)
+    CLOSE_PARENS    reduce using rule 24 (array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .)
+    NAME            reduce using rule 24 (array_init -> NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE .)
 
 
-state 41
+state 43
 
     (22) indexing_name -> NAME OPEN_SQUARE NUMBER COLON NUMBER . CLOSE_SQUARE
 
-    CLOSE_SQUARE    shift and go to state 42
+    CLOSE_SQUARE    shift and go to state 45
 
 
-state 42
+state 44
+
+    (23) indexing_name -> NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE .
+
+    CLOSE_PARENS    reduce using rule 23 (indexing_name -> NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE .)
+    NAME            reduce using rule 23 (indexing_name -> NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE .)
+
+
+state 45
 
     (22) indexing_name -> NAME OPEN_SQUARE NUMBER COLON NUMBER CLOSE_SQUARE .
 

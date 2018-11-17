@@ -268,6 +268,15 @@ def p_indexing_name_2(p):
     end = int(p[5])
     p[0] = IndexingName(base_name, start, end)
 
+def p_indexing_name_3(p):
+    """
+    indexing_name : NAME OPEN_SQUARE COLON NUMBER CLOSE_SQUARE
+    """
+    base_name = p[1]
+    start = 0
+    end = int(p[4])
+    p[0] = IndexingName(base_name, start, end)
+
 def p_array_init(p):
     """
     array_init : NAME OPEN_SQUARE DOLLAR NUMBER CLOSE_SQUARE
