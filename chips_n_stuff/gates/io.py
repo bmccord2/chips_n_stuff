@@ -50,19 +50,33 @@ def signed_decimal_input_chip(num_outputs):
                 exit()
             try:
                 numeric = int(raw_values.strip())
-                sign_dig = "1" if numeric < 0 else "0"
+                is_negative = numeric < 0
+                sign_dig = "1" if is_negative else "0"
                 values_str = '{{0:0{}b}}'.format(num_outputs - 1).format(abs(numeric))
                 if sign_dig == "1":
+                    # two's compliment - flip bits
                     values_str = "".join(["1" if c == "0" else "0" for c in values_str])
-                # currently big endian, converted at end
+                
                 values_str = sign_dig + values_str
+                
+                # two's compliment - add one
+                if is_negative:
+                    plus_one = int(values_str, 2) + 1
+                    values_str = '{{0:0{}b}}'.format(num_outputs).format(plus_one)
+
+                # currently big endian, convert to little endian
+                binary = list(reversed([int(x) for x in values_str]))
+                print(binary)
             except ValueError as e:
                 raise ValueError("Invalid input '%s'" % raw_values)
-            if len(values_str) > num_outputs:
+            if len(values_str) > num_outputs or str(binary[-1]) != sign_dig:
+                print(result)
                 raise ValueError("Overflow.")
-            result = list(reversed([int(x) for x in values_str]))
+
+            result = binary
         except ValueError as e:
             print(e)
+
     return result
 
 def output_chip(*values):
@@ -78,6 +92,10 @@ def signed_decimal_output_chip(*values):
     sign = -1 if len(values) > 0 and values[-1] else 1
     binary = list(reversed([str(int(x)) for x in values[:-1]]))
     if sign == -1:
+        # two's compliment - flip bits
         binary = ["1" if c == "0" else "0" for c in binary]
     decimal = sign * int(''.join(binary), 2)
+    if sign == -1:
+        # two's compliment - subtract one
+        decimal -= 1
     print("Current output: %s" % decimal)

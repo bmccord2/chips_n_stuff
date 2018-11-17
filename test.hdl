@@ -32,13 +32,15 @@ full_adder (a b carry_in) => (sum carry_out) {
     or (c1 c2) => (carry_out)
 }
 
-4adder (a[$4] b[$4] carry_in) => (s0 s1 s2 s3 overflow) {
-    full_adder (a[0] b[0] carry_in) => (s0 c0)
-    full_adder (a[1] b[1] c0) => (s1 c1)
-    full_adder (a[2] b[2] c1) => (s2 c2)
-    full_adder (a[3] b[3] c2) => (s3 c3)
-    xor (c2 c3) => (overflow)
+4adder (a[$4] b[$4] carry_in) => (s[$4] overflow) {
+    full_adder (a[0] b[0] carry_in) => (s[0] c[0])
+    full_adder (a[1] b[1] c[0]) => (s[1] c[1])
+    full_adder (a[2] b[2] c[1]) => (s[2] c[2])
+    full_adder (a[3] b[3] c[2]) => (s[3] c[3])
+    xor (c[2] c[3]) => (overflow)
 }
+
+
 
 2x1mux (a b s) => (output) {
     not (s) => (not_s)
