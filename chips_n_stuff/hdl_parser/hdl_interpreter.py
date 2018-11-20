@@ -1,5 +1,7 @@
+import threading
 from random import shuffle
 
+from ..gui.gui import App
 from ..gates.nand import nand
 from ..gates.join_wire import join_wire
 from ..gates.io import (input_chip, output_chip, decimal_input_chip,
@@ -143,6 +145,34 @@ class ExecutableChip(ExecutableBase):
         for chip in chips:
             chip.run()
 
+def init_runner_chip(chip_name, input_params):
+    chip_definition = get_chip(chip_name)
+    
+    num_outputs = len(chip_definition.outputs)
+    num_expected_in = len(chip_definition.inputs)
+    num_actual_in = len(input_params)
+    if num_actual_in > num_expected_in:
+        raise HdlInterpreterError("Too many input params, expected '%s' got '%s'"
+            % (num_expected_in, num_actual_in))
+    elif num_actual_in < num_expected_in:
+        print("Got less params than needed, initializing rest to 0")
+        input_params = [0 for i in range(num_expected_in - num_actual_in)]
+
+    inputs = [Wire(input_value) for input_value in input_params]
+    outputs = [Wire(0) for i in range(num_outputs)]
+    return ExecutableChip(chip_definition, inputs, outputs)
+
+class RunnerThread(threading.Thread):
+    def __init__(self, chip, app):
+        threading.Thread.__init__(self)
+        self.chip = chip
+        self.app = app
+
+    def run(self):
+        self.chip.run()
+        result = [wire.get_value() for wire in self.chip.output_wires]
+        print('Result: {}'.format([int(x) for x in result]))
+
 class ExecutableCommand(object):
 
     def __init__(self, command):
@@ -152,24 +182,12 @@ class ExecutableCommand(object):
         params = self.command.params
         if self.command.name == 'RUN':
             chip_name = params[0]
-            chip_definition = get_chip(chip_name)
-            
-            num_outputs = len(chip_definition.outputs)
             input_params = params[1:]
-            num_expected_in = len(chip_definition.inputs)
-            num_actual_in = len(input_params)
-            if num_actual_in > num_expected_in:
-                raise HdlInterpreterError("Too many input params, expected '%s' got '%s'"
-                    % (num_expected_in, num_actual_in))
-            elif num_actual_in < num_expected_in:
-                print("Got less params than needed, initializing rest to 0")
-                input_params = [0 for i in range(num_expected_in - num_actual_in)]
-
-            inputs = [Wire(input_value) for input_value in input_params]
-            outputs = [Wire(0) for i in range(num_outputs)]
-            chip = ExecutableChip(chip_definition, inputs, outputs)
-            chip.run()
-            return [wire.get_value() for wire in chip.output_wires]
+            chip = init_runner_chip(chip_name, input_params)
+            app = App(chip.chip_definition.inputs, chip.chip_definition.outputs)
+            runner = RunnerThread(chip, app)
+            app.onload = runner.start
+            app.MainLoop()
         else:
             raise ValueError("Unknown command '%s'" % self.command.name)
 
@@ -207,5 +225,3 @@ def interpret(data):
     for command in instructions.commands:
         exec_command = ExecutableCommand(command)
         result = exec_command.run()
-        if result:
-            print('Result: {}'.format([int(x) for x in result]))

@@ -167,13 +167,8 @@ full_adder (a b carry_in) => (sum carry_out) {
 #    output_chip (out) => ()
 # }
 
-my_chip () => () {
-    signed_decimal_input_chip () => (a[$16])
-    signed_decimal_input_chip () => (b[$16])
-    input_chip () => (sub)
-    16add_sub (a[:16] b[:16] sub) => (s[$16] overflow)
-    signed_decimal_output_chip (s[:16]) => ()
-    output_chip (overflow) => ()
+my_chip (a[$16] b[$16] subtract) => (s[$16] overflow) {
+    16add_sub (a[:16] b[:16] subtract) => (s[$16] overflow)
 }
 
 test_16x1mux (i[$16] s[$4]) => (out) {

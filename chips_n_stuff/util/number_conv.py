@@ -1,25 +1,32 @@
 
-def unsigned_decimal_to_binary_ints(str_value, num_outputs):
+def unsigned_decimal_to_binary_ints(value, num_outputs):
     # output is little endian array of ints (0 or 1)
-    try:
-        numeric = int(str_value.strip())
-    except ValueError as e:
-        raise ValueError("Not a valid number '{}'".format(str_value))
+    if isinstance(value, int):
+        numeric = value
+    else:
+        try:
+            numeric = int(value.strip())
+        except ValueError as e:
+            raise ValueError("Not a valid number '{}'".format(value))
 
     if numeric < 0:
-        raise ValueError("Not a positive number (or zero): {}".format(str_value))
+        raise ValueError("Not a positive number (or zero): {}".format(numeric))
     values_str = '{{0:0{}b}}'.format(num_outputs).format(numeric)
     if len(values_str) > num_outputs:
         raise ValueError("Overflow.")
     return list(reversed([int(x) for x in values_str]))
 
-def signed_decimal_to_binary_ints(str_value, num_outputs):
+def signed_decimal_to_binary_ints(value, num_outputs):
     # output is little endian array of ints (0 or 1)
     # converts as two's compliment
-    try:
-        numeric = int(str_value.strip())
-    except ValueError as e:
-        raise ValueError("Not a valid number '%s'" % str_value)
+    if isinstance(value, int):
+        numeric = value
+    else:
+        try:
+            numeric = int(value.strip())
+        except ValueError as e:
+            raise ValueError("Not a valid number '{}'".format(value))
+
 
     is_negative = numeric < 0
     sign_dig = "1" if is_negative else "0"
@@ -68,3 +75,6 @@ def signed_binary_to_decimal(values):
         decimal -= 1
 
     return decimal
+
+def binary_ints_to_str(ints):
+    return ''.join([str(x) for x in ints])
