@@ -178,7 +178,7 @@ test_16x1mux (i[$16] s[$4]) => (out) {
     output_chip (out) => ()
 }
 
-RUN my_chip
+RUN my_chip 0b0100110000000000 0b0010000000000000
 
 # RUN 16not 0b0000000000000000
 # RUN 16x1mux 0b1000000000000000 0b0000

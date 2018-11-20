@@ -8,20 +8,37 @@ from ..util.number_conv import (unsigned_decimal_to_binary_ints,
 
 array_regex = r"([a-zA-Z_0-9]+)\[(\d+)\]"
 
-class BaseIO(object):
+tEVT_OUTPUT = wx.NewEventType()
+EVT_OUTPUT = wx.PyEventBinder(tEVT_OUTPUT, 1)
 
-    def formatted_value(self):
-        return self.value
+def as_array_value(name):
+    r = re.search(array_regex, name)
+    if r:
+        basename = r.group(1)
+        index = int(r.group(2))
+        return basename, index
+    return None
 
-class IO(BaseIO):
+class OutputEvent(wx.PyCommandEvent):
+    def __init__(self, output_name, value):
+        wx.PyCommandEvent.__init__(self, tEVT_OUTPUT, -1)
+        self.output_name = output_name
+        self.value = value
+
+
+class IO(object):
     def __init__(self, name):
         self.name = name
         self.value = 0
 
+    def update_from_event(self, event):
+        if event.output_name == self.name:
+            self.event = event.value
+
     def formatted_value(self):
         return str(self.value)
 
-class ArrayIO(BaseIO):
+class ArrayIO(object):
 
     def __init__(self, basename, first, last):
         self.basename = basename
@@ -40,6 +57,12 @@ class ArrayIO(BaseIO):
         bin_vals = unsigned_decimal_to_binary_ints(self.value, self.size())
         return binary_ints_to_str(bin_vals)
 
+    def update_from_event(self, event):
+        array_name_comps = as_array_value(event.output_name)
+        if array_name_comps:
+            if basename == self.name and self.in_range(index):
+                self.value += 2**index
+
     def formatted_value(self):
         if self.format == 'ubin':
             return self.unsigned_bin_str()
@@ -50,13 +73,6 @@ class ArrayIO(BaseIO):
     def name(self):
         return "{}[{}:{}]".format(self.basename, self.first, self.last)
 
-def as_array_value(name):
-    r = re.search(array_regex, name)
-    if r:
-        basename = r.group(1)
-        index = int(r.group(2))
-        return basename, index
-    return None
 
 def condensed_io_fields(names):
     condensed = []
@@ -114,6 +130,11 @@ class OutputField(wx.StaticText):
     def __init__(self, parent, io):
         self.io = io
         wx.StaticText.__init__(self, parent, label=self.io.formatted_value())
+        self.Bind(EVT_OUTPUT, self.update_value)
+
+    def update_value(self, event):
+        self.io.update_from_event(event)
+        self.SetLabel(self.io.formatted_value())
 
 class InputPanel(wx.Panel):
     def __init__(self, parent, input_names):
@@ -186,11 +207,17 @@ class App(wx.App):
         wx.App.__init__(self, *args, **kwargs)
 
     def OnInit(self):
-        frame = MainFrame(self.input_names, self.output_names)
-        frame.Show()
+        self.frame = MainFrame(self.input_names, self.output_names)
+        self.frame.Show()
         return True
 
     def MainLoop(self):
         if hasattr(self, 'onload'):
             self.onload()
         wx.App.MainLoop(self)
+
+def create_output_event(app, output_name, value):
+    evt = OutputEvent(output_name, int(value))
+    # TODO not this, definitely need to fix
+    for output_field in app.frame.output_panel.output_fields:
+        wx.PostEvent(output_field, evt)

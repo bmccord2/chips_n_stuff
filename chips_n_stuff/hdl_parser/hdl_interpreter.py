@@ -1,7 +1,7 @@
 import threading
 from random import shuffle
 
-from ..gui.gui import App
+from ..gui.gui import App, create_output_event
 from ..gates.nand import nand
 from ..gates.join_wire import join_wire
 from ..gates.io import (input_chip, output_chip, decimal_input_chip,
@@ -156,7 +156,7 @@ def init_runner_chip(chip_name, input_params):
             % (num_expected_in, num_actual_in))
     elif num_actual_in < num_expected_in:
         print("Got less params than needed, initializing rest to 0")
-        input_params = [0 for i in range(num_expected_in - num_actual_in)]
+        input_params += [0 for i in range(num_expected_in - num_actual_in)]
 
     inputs = [Wire(input_value) for input_value in input_params]
     outputs = [Wire(0) for i in range(num_outputs)]
@@ -169,6 +169,11 @@ class RunnerThread(threading.Thread):
         self.app = app
 
     def run(self):
+        output_names = self.chip.chip_definition.outputs
+        for output_name in output_names:
+            output_wire = self.chip.wires[output_name]
+            output_wire.add_listener(lambda: create_output_event(self.app,
+                output_name, output_wire.get_value()))
         self.chip.run()
         result = [wire.get_value() for wire in self.chip.output_wires]
         print('Result: {}'.format([int(x) for x in result]))
