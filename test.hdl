@@ -168,7 +168,7 @@ full_adder (a b carry_in) => (sum carry_out) {
 # }
 
 my_chip (a[$16] b[$16] subtract) => (s[$16] overflow) {
-    16add_sub (a[:16] b[:16] subtract) => (s[$16] overflow)
+    16add_sub (a[:16] b[:16] subtract) => (s[:16] overflow)
 }
 
 test_16x1mux (i[$16] s[$4]) => (out) {
@@ -178,7 +178,7 @@ test_16x1mux (i[$16] s[$4]) => (out) {
     output_chip (out) => ()
 }
 
-RUN my_chip 0b0100110000000000 0b0010000000000000
+RUN my_chip
 
 # RUN 16not 0b0000000000000000
 # RUN 16x1mux 0b1000000000000000 0b0000

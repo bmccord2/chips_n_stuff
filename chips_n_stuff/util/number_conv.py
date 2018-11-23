@@ -73,7 +73,6 @@ def signed_binary_to_decimal(values):
     if sign == -1:
         # two's compliment - subtract one
         decimal -= 1
-
     return decimal
 
 def binary_ints_to_str(ints):

@@ -1,4 +1,5 @@
 import threading
+import time
 from random import shuffle
 
 from ..gui.gui import App, create_output_event
@@ -56,6 +57,8 @@ class Wire(object):
             #print("listener called, value is %s" % self._value)
             listener()
 
+    def __repr__(self):
+        return "WIRE: {}".format(self._value)
 
 class ExecutableBase(object):
 
@@ -114,9 +117,9 @@ class ExecutableChip(ExecutableBase):
         #     self.wires[name] = Wire(0)
 
     def _initialize_internals(self):
-        for wire_name, wire in zip(self.chip_definition.inputs, self.input_wires):
+        for wire_name, wire in self.input_wire_dict().items():
             self.wires[wire_name] = wire
-        for wire_name, wire in zip(self.chip_definition.outputs, self.output_wires):
+        for wire_name, wire in self.output_wire_dict().items():
             self.wires[wire_name] = wire
 
         for chip_id, statement in enumerate(self.chip_definition.logic):
@@ -138,6 +141,12 @@ class ExecutableChip(ExecutableBase):
                     input_wires, output_wires)
             else:
                 self.internal_chips[chip_id] = ExecutableChip(chip_definition, input_wires, output_wires)
+
+    def input_wire_dict(self):
+        return dict(zip(self.chip_definition.inputs, self.input_wires))
+
+    def output_wire_dict(self):
+        return dict(zip(self.chip_definition.outputs, self.output_wires))
 
     def run(self):
         chips = list(self.internal_chips.values())
@@ -167,16 +176,36 @@ class RunnerThread(threading.Thread):
         threading.Thread.__init__(self)
         self.chip = chip
         self.app = app
+        self._stop = False
+        self.to_set = {}
 
     def run(self):
         output_names = self.chip.chip_definition.outputs
         for output_name in output_names:
+            print("adding to " + output_name)
             output_wire = self.chip.wires[output_name]
-            output_wire.add_listener(lambda: create_output_event(self.app,
-                output_name, output_wire.get_value()))
+            output_wire.add_listener(create_output_event(self.app,
+                str(output_name), output_wire.get_value(), 
+                self.chip.output_wire_dict()))
         self.chip.run()
-        result = [wire.get_value() for wire in self.chip.output_wires]
-        print('Result: {}'.format([int(x) for x in result]))
+
+        while not self._stop:
+            for input_name, value in self.to_set.items():
+                self.chip.wires[input_name].update(int(value))
+                # for k, v in self.chip.wires.items():
+                #     if k in output_names:
+                #         print(k, v)
+            self.to_set = {}
+            time.sleep(.01)
+
+        # result = [wire.get_value() for wire in self.chip.output_wires]
+        # print('Result: {}'.format([int(x) for x in result]))
+    
+    def set_input(self, input_name, value):
+        self.to_set[input_name] = value
+
+    def stop(self):
+        self._stop = True
 
 class ExecutableCommand(object):
 
@@ -189,9 +218,7 @@ class ExecutableCommand(object):
             chip_name = params[0]
             input_params = params[1:]
             chip = init_runner_chip(chip_name, input_params)
-            app = App(chip.chip_definition.inputs, chip.chip_definition.outputs)
-            runner = RunnerThread(chip, app)
-            app.onload = runner.start
+            app = App(chip)
             app.MainLoop()
         else:
             raise ValueError("Unknown command '%s'" % self.command.name)
