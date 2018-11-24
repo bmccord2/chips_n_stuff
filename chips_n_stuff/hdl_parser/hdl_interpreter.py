@@ -182,7 +182,6 @@ class RunnerThread(threading.Thread):
     def run(self):
         output_names = self.chip.chip_definition.outputs
         for output_name in output_names:
-            print("adding to " + output_name)
             output_wire = self.chip.wires[output_name]
             output_wire.add_listener(create_output_event(self.app,
                 str(output_name), output_wire.get_value(), 

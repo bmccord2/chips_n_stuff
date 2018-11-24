@@ -200,9 +200,7 @@ class InputField(wx.TextCtrl):
     def handle_change(self, evt):
         # TODO check input
         if isinstance(self.io, IO):
-            print(self.GetValue())
             self.io = IO(self.io.name, self.GetValue())
-            print(self.io.value)
         else:
             self.io = ArrayIO(self.previous_io.basename, self.previous_io.first,
                 self.previous_io.last, self.GetValue())
