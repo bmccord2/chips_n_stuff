@@ -36,6 +36,9 @@ class IO(object):
             self.value = 0
         self.value = min(1, self.value)
 
+    def is_member(self, output_name):
+        return output_name == self.name
+
     def update_from_event(self, event):
         if event.output_name == self.name:
             self.value = int(event.value)
@@ -278,13 +281,14 @@ class OutputPanel(wx.Panel):
             self.sizer.Add(output_sizer, 0, wx.ALL|wx.EXPAND, border=5)
 
 class MainFrame(wx.Frame):
-    def __init__(self, input_names, output_names, set_input):
-        wx.Frame.__init__(self, None, title="GUI", size=(640,480))
+    def __init__(self, input_names, output_names, set_input, onexit):
+        wx.Frame.__init__(self, None, title="chips n stuff", size=(640,480))
         self.set_input = set_input
         self.main_panel = wx.Panel(self)
         self.input_panel = InputPanel(self.main_panel, input_names,
             set_input)
         self.output_panel = OutputPanel(self.main_panel, output_names)
+        self.onexit = onexit
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
         self.panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.main_panel.SetSizer(self.panel_sizer)
@@ -293,6 +297,7 @@ class MainFrame(wx.Frame):
 
 
     def OnCloseWindow(self, e):
+        self.onexit()
         self.Destroy()
 
 class App(wx.App):
@@ -306,7 +311,8 @@ class App(wx.App):
 
     def OnInit(self):
         self.frame = MainFrame(self.chip.chip_definition.inputs, 
-            self.chip.chip_definition.outputs, self.runner.set_input)
+            self.chip.chip_definition.outputs, self.runner.set_input,
+            self.runner.stop)
         self.frame.Show()
         return True
 
@@ -314,10 +320,9 @@ class App(wx.App):
         self.runner.start()
         wx.App.MainLoop(self)
 
-def create_output_event(app, output_name, value, output_wires_dict):
-    def _create_output_event():
-        evt = OutputEvent(output_name, int(value), output_wires_dict)
-        # TODO not this, definitely need to fix
-        for output_field in app.frame.output_panel.output_fields:
+def create_output_event(app, output_name, output_wires_dict):
+    evt = OutputEvent(output_name, output_wires_dict[output_name].get_value(), 
+        output_wires_dict)
+    for output_field in app.frame.output_panel.output_fields:
+        if output_field.io.is_member(output_name):
             wx.PostEvent(output_field, evt)
-    return _create_output_event

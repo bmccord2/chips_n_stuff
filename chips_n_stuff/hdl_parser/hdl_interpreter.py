@@ -181,11 +181,11 @@ class RunnerThread(threading.Thread):
 
     def run(self):
         output_names = self.chip.chip_definition.outputs
+        output_wire_dict =  self.chip.output_wire_dict()
         for output_name in output_names:
             output_wire = self.chip.wires[output_name]
-            output_wire.add_listener(create_output_event(self.app,
-                str(output_name), output_wire.get_value(), 
-                self.chip.output_wire_dict()))
+            args = (self.app, str(output_name), output_wire_dict)
+            output_wire.add_listener(lambda args=args: create_output_event(*args))
         self.chip.run()
 
         while not self._stop:
@@ -196,7 +196,6 @@ class RunnerThread(threading.Thread):
                 #         print(k, v)
             self.to_set = {}
             time.sleep(.01)
-
         # result = [wire.get_value() for wire in self.chip.output_wires]
         # print('Result: {}'.format([int(x) for x in result]))
     
