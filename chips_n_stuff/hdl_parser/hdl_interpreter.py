@@ -176,7 +176,7 @@ class RunnerThread(threading.Thread):
         threading.Thread.__init__(self)
         self.chip = chip
         self.app = app
-        self._stop = False
+        self._quit = False
         self.to_set = {}
 
     def run(self):
@@ -188,7 +188,7 @@ class RunnerThread(threading.Thread):
             output_wire.add_listener(lambda args=args: create_output_event(*args))
         self.chip.run()
 
-        while not self._stop:
+        while not self._quit:
             for input_name, value in self.to_set.items():
                 self.chip.wires[input_name].update(int(value))
                 # for k, v in self.chip.wires.items():
@@ -203,7 +203,7 @@ class RunnerThread(threading.Thread):
         self.to_set[input_name] = value
 
     def stop(self):
-        self._stop = True
+        self._quit = True
 
 class ExecutableCommand(object):
 
